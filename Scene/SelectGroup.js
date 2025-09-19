@@ -10,7 +10,6 @@ const inGroup = Markup.inlineKeyboard([
   ],
   [Markup.button.callback("👥 Изменить группу", "SET_COURSE")],
   [Markup.button.callback("🧑‍💻 Связь с поддержкой", "HELP")],
-
 ]);
 
 // Хелпер: удалить предыдущее сообщение бота
@@ -58,7 +57,6 @@ const step2 = async (ctx) => {
 
   if (/^[1-5]$/.test(text) || /^[1-5]️⃣$/.test(text)) {
     ctx.session.course = text.replace("️⃣", ""); // убираем эмодзи при вводе
-
     const groupsData = await getGroups(ctx.session.course);
     ctx.session.availableGroups = groupsData.groups;
 

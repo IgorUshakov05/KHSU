@@ -47,7 +47,7 @@ bot.start(async (ctx) => {
   console.log(save_user);
 
   // Стикер приветствия
-  // await sendRandomSticker(ctx)
+  await sendRandomSticker(ctx);
   await ctx.reply(
     `${save_user.message}`,
     !!save_user.user.group
@@ -63,11 +63,10 @@ bot.start(async (ctx) => {
 
 bot.action(/GROUP_(.+)/, async (ctx) => {
   try {
+    await ctx.answerCbQuery();
     const group = ctx.match[1];
     const chatId = ctx.chat.id;
     const result = await SetGroup({ chatId, group });
-
-    await ctx.answerCbQuery(); // убираем "часики" на кнопке
 
     // Стикер подтверждения выбора группы
     await ctx.sendSticker(
@@ -84,7 +83,11 @@ bot.action(/GROUP_(.+)/, async (ctx) => {
 });
 
 bot.action("SET_COURSE", async (ctx) => {
-  await ctx.answerCbQuery();
+  await ctx.answerCbQuery().catch(() => {});
+  await ctx.scene.enter("SET_COURSE");
+});
+
+bot.command("setcourse", async (ctx) => {
   await ctx.scene.enter("SET_COURSE");
 });
 
@@ -107,7 +110,6 @@ require("./Actions/Schedule_Tommorow")(bot);
 
 // Поддержка
 require("./Actions/Help")(bot);
-
 
 // Запуск
 (async () => {
