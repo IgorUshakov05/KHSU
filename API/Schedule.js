@@ -2,12 +2,12 @@ const axios = require("axios");
 
 async function getSchedule(group, date) {
   try {
-    const url = `https://t2iti.khsu.ru/api/getpairs/date:${group}:${date}`;
+    const url = `${process.env.SERVER_URL}/api/getpairs/date:${group}:${date}`;
     const response = await axios.get(url);
     const schedule = response.data;
 
     const { data: pairsData } = await axios.get(
-      "https://t2iti.khsu.ru/api/getpairstime"
+      `${process.env.SERVER_URL}/api/getpairstime`
     );
     const pairsTime = pairsData.pairs_time || [];
 
