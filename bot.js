@@ -44,8 +44,8 @@ bot.start(async (ctx) => {
   const fullname = `${ctx.from.first_name || ""} ${
     ctx.from.last_name || ""
   }`.trim();
-
-  let save_user = await RegisterUser({ chat_id, fullname });
+  let username = ctx.from?.username;
+  let save_user = await RegisterUser(ctx, { chat_id, fullname, username });
   console.log(save_user);
 
   // Стикер приветствия
@@ -183,6 +183,5 @@ bot.on("message", async (ctx) => {
   await bot.launch();
   console.log("🤖 Bot started (polling).");
 })();
-
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));

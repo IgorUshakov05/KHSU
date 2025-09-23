@@ -1,17 +1,24 @@
 const User = require("../Models/User");
-
-async function RegisterUser({ chat_id, fullname, group }) {
+async function RegisterUser(ctx, { chat_id, fullname, username }) {
   try {
     let user = await User.findOne({ chatId: chat_id });
 
     if (!user) {
       user = new User({
         chatId: chat_id,
+        username,
         fullname,
-        group,
       });
       await user.save();
       console.log("✅ Новый пользователь сохранён:", user);
+      await ctx.telegram.sendMessage(
+        process.env.DEV_CHAT_ID,
+        `👤 Новый пользователь зарегистрирован:\n\n` +
+          `Fullname: ${fullname}\n` +
+          `Username: ${username || "Не установлен"}\n` +
+          `ChatID: ${chat_id}`
+      );
+
       return {
         success: true,
         message: `✅ Добро пожаловать, ${user.fullname}!`,
