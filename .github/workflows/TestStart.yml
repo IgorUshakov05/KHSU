@@ -10,10 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install dependencies
         run: npm install
+
       - name: Write .env
         run: |
           printf "%s" "${{secrets.ENV_FILE}}" > .env
+
+      - name: Build and run with docker-compose
+        run: |
+          docker-compose --file docker-compose.yml up --build -d
+
       - name: Run tests
-        run: npm start
+        run: |
+          docker-compose exec -T khsu npm start
