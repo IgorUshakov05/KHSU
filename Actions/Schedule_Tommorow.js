@@ -35,9 +35,12 @@ module.exports = (bot) => {
       }
 
       const schedule = await getSchedule(user.group, formatted);
-
+      console.log(schedule)
+      if (!schedule.success) {
+        throw Error("Ошибка при получении расписания");
+      }
       if (!schedule || !schedule.lessons || schedule.lessons.length === 0) {
-        ctx.reply("📭 Сегодня занятий нет!");
+        ctx.reply("📭 Завтра занятий нет!");
         return ctx.sendSticker(
           "CAACAgIAAxkBAAICqGjNeQkv44HyJyKFfcBklUfaKMs2AAJYAAPkoM4HrNDsfmL1_f82BA"
         );
@@ -54,7 +57,7 @@ module.exports = (bot) => {
 
       await ctx.reply(text, { parse_mode: "HTML", ...inGroup });
     } catch (error) {
-      await ctx.answerCbQuery();
+      await ctx.answerCbQuery().catch(() => {});;
       const text = `
 🆘 *Нужна помощь?*
 

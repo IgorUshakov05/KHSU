@@ -10,7 +10,7 @@ const inGroup = Markup.inlineKeyboard([
 
 module.exports = (bot) => {
   bot.action("HELP", async (ctx) => {
-    await ctx.answerCbQuery();
+    await ctx.answerCbQuery().catch(() => {});;
     const text = `
 🆘 *Нужна помощь?*
 

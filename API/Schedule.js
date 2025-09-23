@@ -6,7 +6,9 @@ async function getSchedule(group, date) {
     const response = await axios.get(url);
     const schedule = response.data;
 
-    const { data: pairsData } = await axios.get("https://t2iti.khsu.ru/api/getpairstime");
+    const { data: pairsData } = await axios.get(
+      "https://t2iti.khsu.ru/api/getpairstime"
+    );
     const pairsTime = pairsData.pairs_time || [];
 
     if (schedule?.lessons?.length > 0) {
@@ -16,14 +18,15 @@ async function getSchedule(group, date) {
           ...lesson,
           time_start: pair?.time_start || null,
           time_end: pair?.time_end || null,
+          success: true,
         };
       });
     }
 
-    return schedule;
+    return { success: true, ...schedule };
   } catch (err) {
     console.error("❌ Ошибка при запросе расписания:", err.message);
-    throw err;
+    return { success: false };
   }
 }
 

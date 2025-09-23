@@ -11,6 +11,10 @@ const UserSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  role: {
+    type: String,
+    default: "student",
+  },
   group: {
     type: String,
     required: false,

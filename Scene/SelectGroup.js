@@ -56,14 +56,29 @@ const step2 = async (ctx) => {
   }
 
   if (/^[1-5]$/.test(text) || /^[1-5]️⃣$/.test(text)) {
-    ctx.session.course = text.replace("️⃣", ""); // убираем эмодзи при вводе
+    ctx.session.course = text.replace("️⃣", "");
     const groupsData = await getGroups(ctx.session.course);
-    ctx.session.availableGroups = groupsData.groups;
+    if (!groupsData.success) {
+      const text = `
+🆘 *Возникла ошика?*
+
+Напишите напрямую разработчику:
+👤 @O101O1O1O
+
+Мы постараемся ответить как можно быстрее! ⚡
+
+Выберите действие ниже, чтобы продолжить:
+`;
+
+      await ctx.reply(text, { ...inGroup, parse_mode: "Markdown" });
+      return ctx.scene.leave();
+    }
+    ctx.session.availableGroups = groupsData.group.groups;
 
     await deletePrevMessage(ctx);
 
     const keyBoard = Markup.inlineKeyboard(
-      groupsData.groups.map((group) => [
+      groupsData.group.groups.map((group) => [
         Markup.button.callback(`📚 ${group}`, `GROUP_${group}`),
       ])
     );
@@ -83,7 +98,7 @@ const finishStep = async (ctx) => {
   const data = ctx.update.callback_query?.data;
 
   if (data === "BACK") {
-    await ctx.answerCbQuery();
+    await ctx.answerCbQuery().catch(() => {});;
     return ctx.wizard.selectStep(0); // возвращаемся к выбору курса
   }
 
@@ -95,7 +110,7 @@ const finishStep = async (ctx) => {
   const fullname = ctx.from.first_name + " " + (ctx.from.last_name || "");
   await SetGroup({ chatId, fullname, group });
 
-  await ctx.answerCbQuery();
+  await ctx.answerCbQuery().catch(() => {});;
   await deletePrevMessage(ctx);
 
   const sent = await ctx.reply(`✅ Вы выбрали группу: <b>${group}</b> 🎉`, {

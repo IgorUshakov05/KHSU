@@ -37,7 +37,10 @@ module.exports = (bot) => {
       }
 
       const schedule = await getSchedule(user.group, formatted);
-
+      console.log(schedule);
+      if (!schedule.success) {
+        throw Error("Ошибка при получении расписания");
+      }
       if (!schedule || !schedule.lessons || schedule.lessons.length === 0) {
         ctx.reply("📭 Сегодня занятий нет!");
         return ctx.sendSticker(
@@ -57,7 +60,7 @@ module.exports = (bot) => {
 
       await ctx.reply(text, { parse_mode: "HTML", ...inGroup });
     } catch (error) {
-      await ctx.answerCbQuery();
+      await ctx.answerCbQuery().catch(() => {});;
       const text = `
 🆘 *Нужна помощь?*
 

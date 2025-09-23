@@ -3,8 +3,15 @@ const { Telegraf, Markup } = require("telegraf");
 const { Scenes, session } = require("telegraf");
 const mongoose = require("mongoose");
 const setCourseWizard = require("./Scene/SelectGroup");
-const { RegisterUser, SetGroup } = require("./DataBase/Request/User"); // добавил SetGroup
-const stage = new Scenes.Stage([setCourseWizard]);
+const spamAll = require("./Scene/SendNews");
+const spamGroup = require("./Scene/SendNewsGroup");
+
+const {
+  RegisterUser,
+  SetGroup,
+  Set_Admin,
+} = require("./DataBase/Request/User");
+const stage = new Scenes.Stage([setCourseWizard, spamAll, spamGroup]);
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const stickers = [
@@ -32,11 +39,6 @@ const inGroup = Markup.inlineKeyboard([
   [Markup.button.callback("🧑‍💻 Связь с поддержкой", "HELP")],
 ]);
 
-bot.on("sticker", async (ctx) => {
-  console.log("Sticker file_id:", ctx.message.sticker.file_id);
-  await ctx.reply("Файл стикера получен ✅");
-});
-
 bot.start(async (ctx) => {
   const chat_id = ctx.chat.id;
   const fullname = `${ctx.from.first_name || ""} ${
@@ -63,7 +65,7 @@ bot.start(async (ctx) => {
 
 bot.action(/GROUP_(.+)/, async (ctx) => {
   try {
-    await ctx.answerCbQuery();
+    await ctx.answerCbQuery().catch(() => {});
     const group = ctx.match[1];
     const chatId = ctx.chat.id;
     const result = await SetGroup({ chatId, group });
@@ -82,21 +84,54 @@ bot.action(/GROUP_(.+)/, async (ctx) => {
   }
 });
 
+// Поставить курс
 bot.action("SET_COURSE", async (ctx) => {
-  await ctx.answerCbQuery().catch(() => {});
+  ctx.answerCbQuery().catch(() => {});
   await ctx.scene.enter("SET_COURSE");
+});
+
+// Общая рассылка
+bot.action("BROADCAST_ALL", async (ctx) => {
+  ctx.answerCbQuery().catch(() => {});
+  await ctx.scene.enter("BROADCAST_ALL");
+});
+
+// Рассылка для группы
+bot.action("BROADCAST_GROUP", async (ctx) => {
+  ctx.answerCbQuery().catch(() => {});
+  await ctx.scene.enter("BROADCAST_GROUP");
 });
 
 bot.command("setcourse", async (ctx) => {
   await ctx.scene.enter("SET_COURSE");
 });
 
+// Действие команды
+bot.command(process.env.ADMIN_COMMAND, async (ctx) => {
+  const chat_id = ctx.chat.id;
+  await Set_Admin(chat_id);
+
+  await ctx.reply(
+    `⚡️ <b>Админ-панель</b> ⚡️\n
+🛠 Здесь вы можете управлять рассылками.\n
+Выберите действие ниже 👇`,
+    {
+      parse_mode: "HTML",
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback("📢 Общая рассылка", "BROADCAST_ALL")],
+        [Markup.button.callback("👥 Рассылка для группы", "BROADCAST_GROUP")],
+      ]),
+    }
+  );
+});
 async function connectDB() {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    let uri =
+      process.env.MODE === "DEV"
+        ? process.env.MONGO_URI_DEV
+        : process.env.MONGO_URI_PROD;
+    console.log(uri);
+    await mongoose.connect(uri);
     console.log("✅ MongoDB подключен");
   } catch (err) {
     console.error("❌ Ошибка подключения к MongoDB:", err.message);
@@ -110,10 +145,41 @@ require("./Actions/Schedule_Tommorow")(bot);
 
 // Поддержка
 require("./Actions/Help")(bot);
+bot.on("message", async (ctx) => {
+  const { chat, message_id, from } = ctx.message;
 
+  console.log(
+    `Новое сообщение от ${from.first_name} (${
+      from.username || "нет юзернейма"
+    })`
+  );
+  if (ctx.message.text) console.log("Текст:", ctx.message.text);
+  if (ctx.message.sticker)
+    console.log("Стикер file_id:", ctx.message.sticker.file_id);
+  if (ctx.message.photo)
+    console.log(
+      "Фото:",
+      ctx.message.photo.map((p) => p.file_id)
+    );
+
+  try {
+    // Пересылаем сообщение в DEV_CHAT_ID с сохранением имени отправителя
+    await ctx.telegram.forwardMessage(
+      process.env.DEV_CHAT_ID, // куда пересылаем
+      chat.id, // откуда
+      message_id // ID сообщения
+    );
+    console.log("Сообщение успешно переслано в DEV");
+  } catch (e) {
+    console.log("Ошибка при пересылке в DEV:", e);
+  }
+});
 // Запуск
 (async () => {
+  console.log("Начало запуска");
+
   await connectDB();
+
   await bot.launch();
   console.log("🤖 Bot started (polling).");
 })();
