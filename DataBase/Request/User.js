@@ -96,6 +96,7 @@ async function SetGroup({ chatId, fullname, group }) {
       { new: true }
     );
 
+    
     if (!user) {
       user = new User({
         chatId,
