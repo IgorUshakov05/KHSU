@@ -133,7 +133,7 @@ const step3 = async (ctx) => {
 };
 
 const broadcastGroupWizard = new WizardScene(
-  "BROADCAST_GROUP",
+ "BROADCAST_GROUP",
   step0,
   step1,
   step2,
