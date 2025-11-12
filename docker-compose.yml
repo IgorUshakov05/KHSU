@@ -1,24 +1,27 @@
 version: "3.9"
 
 services:
-  mongodb: 
-    image: mongo:6
-    restart: always
+  mongo:
+    image: mongo:6.0-jammy
+    container_name: mongo
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: khsu
     volumes:
-      - mongodb_data:/data/db
+      - mongo_data:/data/db
 
   bot:
     container_name: khsu_bot
+    build: .   # можно оставить для локальной сборки
+    image: igorushakov111/khsu-bot:latest
     depends_on:
-      - mongodb
-    build: .
+      - mongo
     restart: unless-stopped
-    env_file: 
+    env_file:
       - .env
     stdin_open: true
     tty: true
 
 volumes:
-  mongodb_data:
+  mongo_data:
